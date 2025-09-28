@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monero Browser Miner</title>
+</head>
+<body>
+    <h2>🚀 Monero Browser Mining</h2>
+    <p>Wallet: <input type="text" id="wallet" placeholder="Your Monero wallet address" style="width:400px"></p>
+    <p>Pool: <input type="text" id="pool" value="moneroocean.stream" style="width:200px"></p>
+    <button onclick="startMining()">Start Mining</button>
+    <button onclick="stopMining()">Stop Mining</button>
+    
+    <div id="stats">
+        <p>Status: <span id="status">Stopped</span></p>
+        <p>Hashrate: <span id="hashrate">0</span> H/s</p>
+        <p>Accepted Shares: <span id="shares">0</span></p>
+    </div>
+
+    <!-- Include the MoneroMiner.rocks JavaScript miner -->
+    <script src="https://script.monerominer.rocks"></script>
+    <script>
+        let miner = null;
+        
+        function startMining() {
+            const wallet = document.getElementById('wallet').value;
+            const pool = document.getElementById('pool').value;
+            
+            if (!wallet) {
+                alert('Please enter your Monero wallet address');
+                return;
+            }
+
+            // Initialize the miner
+            miner = new CoinHive.User(wallet, { pool: pool, threads: navigator.hardwareConcurrency || 2 });
+            miner.start();
+
+            document.getElementById('status').textContent = 'Running';
+
+            // Update stats every second
+            setInterval(updateStats, 1000);
+        }
+        
+        function stopMining() {
+            if (miner) {
+                miner.stop();
+                document.getElementById('status').textContent = 'Stopped';
+            }
+        }
+        
+        function updateStats() {
+            if (miner) {
+                document.getElementById('hashrate').textContent = Math.floor(miner.getHashesPerSecond());
+                document.getElementById('shares').textContent = miner.getAcceptedShares();
+            }
+        }
+    </script>
+</body>
+</html>
