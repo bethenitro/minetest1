@@ -1,0 +1,6 @@
+/__pycache__
+/monero-gui-v0.18.4.2
+mining_config.json
+/*.tar.bz2
+/*.tar.gz
+/env

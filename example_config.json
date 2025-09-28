@@ -1,0 +1,8 @@
+{
+    "cpu_cores_num": 4,
+    "cpu_ram": 8,
+    "pool_url": "pool.supportxmr.com:443",
+    "wallet_address": "YOUR_MONERO_WALLET_ADDRESS_HERE",
+    "worker_id": "fastapi-miner-001",
+    "password": "x"
+}
