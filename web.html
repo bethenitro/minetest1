@@ -9,52 +9,86 @@
     <h2>🚀 Monero Browser Mining</h2>
     <p>Wallet: <input type="text" id="wallet" placeholder="Your Monero wallet address" style="width:400px"></p>
     <p>Pool: <input type="text" id="pool" value="moneroocean.stream" style="width:200px"></p>
-    <button onclick="startMining()">Start Mining</button>
-    <button onclick="stopMining()">Stop Mining</button>
+    <p>Threads: <input type="number" id="threads" value="-1" min="-1" max="16" style="width:100px"> (-1 for auto)</p>
+    <p>Worker ID: <input type="text" id="workerId" placeholder="Optional worker identifier" style="width:200px"></p>
+    <button onclick="initMining()">Start Mining</button>
+    <button onclick="stopMiner()">Stop Mining</button>
     
     <div id="stats">
         <p>Status: <span id="status">Stopped</span></p>
-        <p>Hashrate: <span id="hashrate">0</span> H/s</p>
-        <p>Accepted Shares: <span id="shares">0</span></p>
+        <p>Note: Check your wallet stats on the pool website for hashrate and earnings</p>
     </div>
 
     <!-- Include the MoneroMiner.rocks JavaScript miner -->
     <script src="https://script.monerominer.rocks"></script>
     <script>
-        let miner = null;
+        let miningActive = false;
+        let updateInterval;
         
-        function startMining() {
+        // Function renamed to avoid conflict with library's startMining()
+        function initMining() {
             const wallet = document.getElementById('wallet').value;
             const pool = document.getElementById('pool').value;
+            const threads = parseInt(document.getElementById('threads').value);
+            const workerId = document.getElementById('workerId').value || "browser-miner";
             
             if (!wallet) {
                 alert('Please enter your Monero wallet address');
                 return;
             }
 
-            // Initialize the miner
-            miner = new CoinHive.User(wallet, { pool: pool, threads: navigator.hardwareConcurrency || 2 });
-            miner.start();
-
-            document.getElementById('status').textContent = 'Running';
-
-            // Update stats every second
-            setInterval(updateStats, 1000);
-        }
-        
-        function stopMining() {
-            if (miner) {
-                miner.stop();
-                document.getElementById('status').textContent = 'Stopped';
+            try {
+                // Set the mining server (required by MoneroMiner.rocks)
+                server = "wss://ny1.xmrminingproxy.com";
+                
+                // Call the library's startMining function
+                startMining(pool, wallet, workerId, threads, "x");
+                
+                // Set CPU throttle (20 = use 80% of CPU)
+                throttleMiner = 20;
+                
+                miningActive = true;
+                document.getElementById('status').textContent = 'Mining Started - Check pool for stats';
+                
+            } catch (error) {
+                console.error('Mining failed to start:', error);
+                document.getElementById('status').textContent = 'Error: ' + error.message;
             }
         }
         
-        function updateStats() {
-            if (miner) {
-                document.getElementById('hashrate').textContent = Math.floor(miner.getHashesPerSecond());
-                document.getElementById('shares').textContent = miner.getAcceptedShares();
+        function stopMiner() {
+            if (miningActive) {
+                try {
+                    // Call the library's stopMining function if it exists
+                    if (typeof stopMining === 'function') {
+                        stopMining();
+                    }
+                    miningActive = false;
+                    document.getElementById('status').textContent = 'Stopped';
+                    
+                } catch (error) {
+                    console.error('Error stopping miner:', error);
+                    document.getElementById('status').textContent = 'Error stopping miner';
+                }
             }
         }
+        
+        // Handle page unload to stop mining
+        window.addEventListener('beforeunload', function() {
+            if (miningActive) {
+                stopMiner();
+            }
+        });
+        
+        // Optional: Show mining status updates
+        function showMiningInfo() {
+            if (miningActive) {
+                console.log('Mining is active. Check your pool dashboard for detailed statistics.');
+            }
+        }
+        
+        // Show mining info every 30 seconds when active
+        setInterval(showMiningInfo, 30000);
     </script>
 </body>
 </html>
